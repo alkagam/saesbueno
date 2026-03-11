@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Alumnos - SAES Cloud</title>
+  <link rel="stylesheet" href="nocturno.css">
+</head>
+<body>
+
+  <header>
+    <h1>⬡ SAES Cloud - Portal del Alumno</h1>
+    <div>
+      <button class="btn btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <div class="card perfil-card glow">
+      <div class="perfil-avatar">🎓</div>
+      <div class="perfil-info">
+        <h2 id="p_nombre">Cargando tu información...</h2>
+        <p class="perfil-id" id="p_boleta">Boleta: ---------</p>
+        
+        <div class="perfil-grid">
+          <div class="perfil-item"><span>CURP:</span> <span id="p_curp">--</span></div>
+          <div class="perfil-item"><span>Correo:</span> <span id="p_correo">--</span></div>
+          <div class="perfil-item"><span>F. Nacimiento:</span> <span id="p_nacimiento">--</span></div>
+          <div class="perfil-item"><span>F. Ingreso:</span> <span id="p_ingreso">--</span></div>
+        </div>
+
+        <p class="perfil-detalles" id="p_detalles">
+          Carrera ID: -- | Semestre: -- | Turno: -- | Situación: --
+        </p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('calificaciones')">Mis Calificaciones</button>
+      <button class="tab-btn" onclick="switchTab('inscripciones')">Inscripciones y Horario</button>
+    </div>
+
+    <div id="calificaciones" class="tab-content active">
+      <div class="card">
+        <h2>Historial Académico</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Inscripción</th>
+                <th>Parcial 1</th>
+                <th>Parcial 2</th>
+                <th>Parcial 3</th>
+                <th>Definitiva</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-calificaciones">
+              <tr><td colspan="6">Cargando calificaciones...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="inscripciones" class="tab-content">
+      
+      <div class="card" style="border-left: 4px solid var(--acento-azul);">
+        <h2>Mi Horario Actual (Materias Inscritas)</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Inscripción</th>
+                <th>Materia y Grupo</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-mis-inscripciones">
+              <tr><td colspan="4">Cargando tus materias inscritas...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Oferta de Grupos Disponibles</h2>
+        
+        <div class="form-grid" style="align-items: end; max-width: 400px;">
+          <div class="form-group">
+            <label for="input-periodo">Período Académico</label>
+            <input type="text" id="input-periodo" placeholder="Buscando periodo activo...">
+          </div>
+          <button class="btn btn-action" onclick="cargarGrupos()">Buscar Grupos</button>
+        </div>
+        
+        <div class="table-container" style="margin-top: 20px;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Grupo</th>
+                <th>Materia</th>
+                <th>Cupo Disponible</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-grupos">
+              <tr><td colspan="4">Haz clic en Buscar para ver la oferta.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </div>
+
+  </div>
+
+  <script src="api.js"></script>
+
+  <script>
+    const BASE_URL = 'http://20.220.27.67';
+    const idAlumno = localStorage.getItem('id_alumno');
+
+    // Validación de seguridad inicial
+    if (!localStorage.getItem('access_token') || !idAlumno) {
+      alert("Acceso denegado. Inicia sesión como alumno.");
+      window.location.href = 'login.html';
+    }
+
+    // Diccionarios para traducir IDs a nombres reales
+    let mapMaterias = {};
+    let mapGrupos = {};
+    let diccionariosCargados = false;
+
+    // 0. Función maestra que descarga el catálogo en segundo plano (Resistente a Paginación)
+    async function cargarDiccionarios() {
+      if (diccionariosCargados) return; 
+      
+      try {
+        // 1. Bajamos las materias
+        const resMat = await fetchConRefresh(`${BASE_URL}/api/catalog/subjects`);
+        if (resMat.ok) {
+          const resJson = await resMat.json();
+          // Extraemos el arreglo de materias sin importar si el backend lo paginó
+          const materias = Array.isArray(resJson) ? resJson : (resJson.data || resJson.items || resJson.materias || []);
+          
+          if (Array.isArray(materias)) {
+            materias.forEach(m => mapMaterias[m.id_materia] = m.nombre);
+          }
+        }
+        
+        // 2. Bajamos los grupos (para saber qué materia da cada grupo)
+        const resGrup = await fetchConRefresh(`${BASE_URL}/api/schedule/groups`);
+        if (resGrup.ok) {
+          const resJson = await resGrup.json();
+          const grupos = Array.isArray(resJson) ? resJson : (resJson.data || resJson.items || []);
+          
+          if (Array.isArray(grupos)) {
+            grupos.forEach(g => {
+              mapGrupos[g.id_grupo] = mapMaterias[g.id_materia] || `Materia ID: ${g.id_materia}`;
+            });
+          }
+        }
+        diccionariosCargados = true;
+      } catch (error) {
+        console.error("Error cargando diccionarios de traducción", error);
+      }
+    }
+
+    // 1. Control de Pestañas
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+
+      if(tabId === 'calificaciones') cargarCalificaciones();
+      if(tabId === 'inscripciones') {
+        // Primero aseguramos que tenemos los nombres, luego pintamos las tablas
+        cargarDiccionarios().then(() => {
+          cargarMisInscripciones();
+          cargarGrupos(); // Esta función ahora es inteligente y busca el periodo sola
+        });
+      }
+    }
+
+    // Función para formatear fechas a texto legible
+    function formatearFecha(fechaStr) {
+      if (!fechaStr) return '--';
+      const opciones = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(fechaStr).toLocaleDateString('es-MX', opciones);
+    }
+
+    // 2. Cargar Perfil del Alumno
+    async function cargarMiPerfil() {
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/users/students/${idAlumno}`);
+        
+        if (response.ok) {
+          const alumno = await response.json();
+          
+          document.getElementById('p_nombre').textContent = `${alumno.nombre} ${alumno.apellido_paterno} ${alumno.apellido_materno || ''}`;
+          document.getElementById('p_boleta').textContent = `Boleta: ${alumno.boleta}`;
+          
+          document.getElementById('p_curp').textContent = alumno.curp || '--';
+          document.getElementById('p_correo').textContent = alumno.correo_institucional || '--';
+          document.getElementById('p_nacimiento').textContent = formatearFecha(alumno.fecha_nacimiento);
+          document.getElementById('p_ingreso').textContent = formatearFecha(alumno.fecha_ingreso);
+          
+          const colorSituacion = alumno.situacion === 'Regular' ? 'var(--estado-exito)' : 'var(--acento-amarillo)';
+          document.getElementById('p_detalles').innerHTML = `
+            Carrera ID: <strong>${alumno.id_carrera}</strong> &nbsp;·&nbsp; 
+            Semestre: <strong>${alumno.semestre_actual}</strong> &nbsp;·&nbsp; 
+            Turno: <strong>${alumno.turno}</strong> &nbsp;·&nbsp; 
+            Situación: <span style="color: ${colorSituacion}; font-weight: bold;">${alumno.situacion}</span>
+          `;
+        }
+      } catch (error) {
+        console.error("Error al cargar el perfil del alumno:", error);
+      }
+    }
+
+    // 3. Cargar Historial de Calificaciones
+    async function cargarCalificaciones() {
+      const tbody = document.getElementById('tabla-calificaciones');
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/grades/grades/students/${idAlumno}`);
+        if (response.ok) {
+          const data = await response.json();
+          const calificaciones = Array.isArray(data) ? data : (data.data || data.items || []);
+          
+          if (calificaciones.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No tienes calificaciones registradas.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = '';
+          calificaciones.forEach(cal => {
+            const estadoHtml = cal.acreditada ? '<span class="status-badge bg-green">Aprobada</span>' : '<span class="status-badge bg-red">Reprobada</span>';
+            tbody.innerHTML += `
+              <tr>
+                <td style="font-family: monospace; color: var(--acento-azul);">${cal.id_inscripcion ?? 'N/A'}</td>
+                <td>${cal.parcial_1 ?? '-'}</td>
+                <td>${cal.parcial_2 ?? '-'}</td>
+                <td>${cal.parcial_3 ?? '-'}</td>
+                <td style="color: var(--ipn-blanco); font-weight:bold;">${cal.definitiva ?? '-'}</td>
+                <td>${estadoHtml}</td>
+              </tr>
+            `;
+          });
+        }
+      } catch (error) { tbody.innerHTML = '<tr><td colspan="6" class="status-fail">Error de conexión con el servidor.</td></tr>'; }
+    }
+
+    // 4. Cargar Horario Actual (Inscripciones Activas)
+    async function cargarMisInscripciones() {
+      const tbody = document.getElementById('tabla-mis-inscripciones');
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/enrollments/enrollments`);
+        if (response.ok) {
+          const data = await response.json();
+          const inscripciones = Array.isArray(data) ? data : (data.data || data.items || []);
+          
+          if (inscripciones.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">No estás inscrito en ningún grupo actualmente.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = '';
+          inscripciones.forEach(ins => {
+            const badgeClass = ins.estado === 'Activa' ? 'bg-green' : 'bg-gray';
+            const btnBaja = ins.estado === 'Activa' 
+              ? `<button class="btn btn-danger" onclick="darDeBaja(${ins.id_inscripcion})" style="padding: 4px 8px; font-size: 11px;">Dar de baja</button>`
+              : '<span class="status-neutral">-</span>';
+            
+            const nombreMateriaReal = mapGrupos[ins.id_grupo] || `Grupo ${ins.id_grupo}`;
+              
+            tbody.innerHTML += `
+              <tr>
+                <td style="font-family: monospace; color: var(--acento-azul);">${ins.id_inscripcion}</td>
+                <td><strong>${nombreMateriaReal}</strong> <span style="color:var(--texto-secundario); font-size:11px; margin-left:6px;">(Gpo: ${ins.id_grupo})</span></td>
+                <td><span class="status-badge ${badgeClass}">${ins.estado}</span></td>
+                <td>${btnBaja}</td>
+              </tr>
+            `;
+          });
+        }
+      } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="status-fail">Error al cargar tu horario.</td></tr>'; }
+    }
+
+    // 5. Dar de Baja una Materia
+    async function darDeBaja(idInscripcion) {
+      if(!confirm(`¿Estás seguro de darte de baja de esta materia?`)) return;
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/enrollments/enrollments/${idInscripcion}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          alert("Te has dado de baja exitosamente.");
+          cargarMisInscripciones(); 
+          cargarGrupos();           
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          const mensajeServer = errorData.error || errorData.message || 'El periodo ya está cerrado o confirmado.';
+          alert(`No se pudo realizar la baja:\n${mensajeServer}`);
+        }
+      } catch (error) { alert("Error de red al intentar dar de baja."); }
+    }
+
+    // 6. Ver Oferta de Grupos (Búsqueda Automática del Periodo Activo)
+    async function cargarGrupos() {
+      let periodo = document.getElementById('input-periodo').value;
+      const tbody = document.getElementById('tabla-grupos');
+      
+      tbody.innerHTML = '<tr><td colspan="4">Buscando grupos disponibles...</td></tr>';
+
+      // Si el alumno no escribió nada, consultamos el periodo activo en el sistema
+      if (!periodo) {
+        try {
+          const resPeriodo = await fetchConRefresh(`${BASE_URL}/api/schedule/periods/active`);
+          if (resPeriodo.ok) {
+            const periodoActivo = await resPeriodo.json();
+            periodo = periodoActivo.clave; 
+            document.getElementById('input-periodo').value = periodo; 
+          } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="status-warn">No hay un período de inscripciones activo en este momento.</td></tr>';
+            return; 
+          }
+        } catch (error) {
+          tbody.innerHTML = '<tr><td colspan="4" class="status-fail">Error al consultar el período activo.</td></tr>';
+          return;
+        }
+      }
+      
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/enrollments/groups/available?period=${periodo}&student=${idAlumno}`);
+        if (response.ok) {
+          const data = await response.json();
+          const grupos = Array.isArray(data) ? data : (data.data || data.items || []);
+          
+          if (grupos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4">No hay grupos disponibles o tienes conflictos de horario.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = '';
+          grupos.forEach(grupo => {
+            const nombreMateriaReal = mapMaterias[grupo.id_materia] || mapGrupos[grupo.id_grupo] || `Materia Desconocida`;
+
+            tbody.innerHTML += `
+              <tr>
+                <td style="font-family: monospace; color: var(--acento-azul);">${grupo.id_grupo}</td>
+                <td><strong>${nombreMateriaReal}</strong></td>
+                <td>${grupo.cupo_disponible} lugares</td>
+                <td><button class="btn btn-action" onclick="inscribir(${grupo.id_grupo})" style="padding: 6px 12px; font-size: 12px;">Inscribirme</button></td>
+              </tr>
+            `;
+          });
+        }
+      } catch (error) { tbody.innerHTML = '<tr><td colspan="4" class="status-fail">Error al buscar grupos.</td></tr>'; }
+    }
+
+    // 7. Inscribirse a un Grupo (Con manejo de Error 409 Conflict)
+    async function inscribir(idGrupo) {
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/enrollments/enrollments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_grupo: idGrupo, tipo: "Ordinaria" })
+        });
+        
+        if (response.ok) {
+          alert("¡Inscripción exitosa!");
+          cargarMisInscripciones(); 
+          cargarGrupos();           
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          const mensajeServer = errorData.error || errorData.message || errorData.detalle || 'Conflicto de horario o sin cupo';
+          alert(`No se pudo inscribir:\n${mensajeServer}`);
+        }
+      } catch (error) { alert("Error de conexión con el servidor."); }
+    }
+
+    // 8. Cierre de Sesión
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+
+    // Arrancar la app cargando el perfil y la pestaña de calificaciones por defecto
+    cargarMiPerfil();
+    cargarCalificaciones();
+  </script>
+</body>
+</html>

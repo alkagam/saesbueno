@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión Escolar - SAES Cloud</title>
+  <style>
+    /* Diseño Dark Mode SAES Cloud */
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #c9d1e0; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+    
+    /* Sidebar */
+    .sidebar { width: 250px; background: #181c27; border-right: 1px solid #2a2f45; display: flex; flex-direction: column; }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid #2a2f45; }
+    .sidebar-header h1 { margin: 0; font-size: 18px; color: #fff; }
+    .sidebar-header p { margin: 5px 0 0; font-size: 12px; color: #6b7592; }
+    .nav-btn { background: transparent; border: none; color: #6b7592; padding: 15px 20px; text-align: left; cursor: pointer; font-size: 14px; font-weight: 600; border-left: 3px solid transparent; transition: 0.2s; }
+    .nav-btn:hover { background: #1e2336; color: #fff; }
+    .nav-btn.active { background: rgba(79, 142, 247, 0.1); color: #4f8ef7; border-left-color: #4f8ef7; }
+    .logout-container { margin-top: auto; padding: 20px; border-top: 1px solid #2a2f45; }
+    
+    .btn-logout { width: 100%; background: #ef4444; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .btn-logout:hover { background: #dc2626; }
+
+    /* Main Content */
+    .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
+    .section { display: none; }
+    .section.active { display: block; }
+    
+    .card { background: #181c27; border: 1px solid #2a2f45; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .card h2 { margin-top: 0; color: #fff; font-size: 18px; border-bottom: 1px solid #2a2f45; padding-bottom: 12px; margin-bottom: 20px; }
+    
+    /* Formularios */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-size: 11px; font-weight: 700; color: #6b7592; margin-bottom: 6px; text-transform: uppercase; }
+    input, select { background: #0f1117; border: 1px solid #2a2f45; color: #fff; padding: 10px; border-radius: 6px; font-size: 13px; }
+    input:focus, select:focus { outline: none; border-color: #4f8ef7; }
+    
+    .btn-action { background: #4f8ef7; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-action:hover { background: #3b82f6; }
+
+    /* Tablas */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px; color: #6b7592; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #2a2f45; }
+    td { padding: 12px 10px; border-bottom: 1px solid #1e2336; font-size: 13px; }
+    tr:hover td { background: #1e2336; }
+    
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+    .bg-green { background: rgba(74, 222, 128, 0.1); color: #4ade80; }
+    .bg-gray { background: rgba(107, 117, 146, 0.1); color: #6b7592; }
+
+    .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>⬡ Gestión Escolar</h1>
+      <p id="txt-rol">Control de Horarios</p>
+    </div>
+    
+    <button class="nav-btn active" onclick="switchSection('sec-periodos', this)">Períodos Académicos</button>
+    <button class="nav-btn" onclick="switchSection('sec-grupos', this)">Creación de Grupos</button>
+    <button class="nav-btn" onclick="switchSection('sec-horarios', this)">Logística (Docentes y Horas)</button>
+    
+    <div class="logout-container">
+      <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <div id="sec-periodos" class="section active">
+      <div class="card">
+        <h2>Iniciar Nuevo Período</h2>
+        <form id="form-periodo">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Clave del Período</label>
+              <input type="text" id="p_clave" required placeholder="Ej. 2025-2">
+            </div>
+            <div class="form-group">
+              <label>Tipo</label>
+              <select id="p_tipo" required>
+                <option value="Ordinario">Ordinario</option>
+                <option value="Especial">Especial</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fecha de Inicio</label>
+              <input type="date" id="p_inicio" required>
+            </div>
+            <div class="form-group">
+              <label>Fecha de Fin</label>
+              <input type="date" id="p_fin" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-action">Aperturar Período</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Períodos Existentes</h2>
+        <button class="btn-action" onclick="cargarPeriodos()" style="margin-bottom: 15px; font-size: 11px; padding: 6px 12px;">Refrescar</button>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Clave</th><th>Fechas</th><th>Tipo</th><th>Estado</th></tr>
+          </thead>
+          <tbody id="tabla-periodos">
+            <tr><td colspan="5">Cargando períodos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="sec-grupos" class="section">
+      <div class="card">
+        <h2>Armar Nuevo Grupo</h2>
+        <form id="form-grupo">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Materia</label>
+              <select id="g_materia" required><option value="">Cargando materias...</option></select>
+            </div>
+            <div class="form-group">
+              <label>Período</label>
+              <select id="g_periodo" required><option value="">Cargando períodos...</option></select>
+            </div>
+            <div class="form-group">
+              <label>Clave del Grupo</label>
+              <input type="text" id="g_clave" required placeholder="Ej. 3AM1">
+            </div>
+            <div class="form-group">
+              <label>Cupo Máximo</label>
+              <input type="number" id="g_cupo" required value="30" min="1">
+            </div>
+            <div class="form-group">
+              <label>Turno</label>
+              <select id="g_turno" required>
+                <option value="Matutino">Matutino</option>
+                <option value="Vespertino">Vespertino</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-action">Crear Grupo</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Listado de Grupos</h2>
+        <button class="btn-action" onclick="cargarGrupos()" style="margin-bottom: 15px; font-size: 11px; padding: 6px 12px;">Refrescar</button>
+        <table>
+          <thead>
+            <tr><th>ID Grupo</th><th>Clave</th><th>Materia ID</th><th>Turno</th><th>Cupo</th></tr>
+          </thead>
+          <tbody id="tabla-grupos">
+            <tr><td colspan="5">Cargando grupos...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="sec-horarios" class="section">
+      <div class="card">
+        <h2>Seleccionar Grupo a Configurar</h2>
+        <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+          <select id="sel_grupo_logistica" onchange="seleccionarGrupoLogistica()">
+            <option value="">Selecciona un grupo...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="split-grid" id="panel-logistica" style="display: none;">
+        
+        <div class="card" style="border-top: 4px solid #f59e0b;">
+          <h2>Asignar Docente</h2>
+          <form id="form-asignar-docente">
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label>Selecciona un Profesor</label>
+              <select id="l_docente" required>
+                <option value="">Cargando docentes...</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-action" style="background: #f59e0b;">Asignar al Grupo</button>
+          </form>
+        </div>
+
+        <div class="card" style="border-top: 4px solid #4ade80;">
+          <h2>Agregar Franja Horaria</h2>
+          <form id="form-agregar-horario">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Día</label>
+                <select id="h_dia" required>
+                  <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                  <option value="Miercoles">Miércoles</option><option value="Jueves">Jueves</option>
+                  <option value="Viernes">Viernes</option><option value="Sabado">Sábado</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Aula</label>
+                <input type="text" id="h_aula" required placeholder="Ej. B-204">
+              </div>
+              <div class="form-group">
+                <label>Inicio</label>
+                <input type="time" id="h_inicio" required>
+              </div>
+              <div class="form-group">
+                <label>Fin</label>
+                <input type="time" id="h_fin" required>
+              </div>
+            </div>
+            <button type="submit" class="btn-action" style="background: #4ade80; color: #0f1117;">Añadir Horario</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const API_URL = 'http://20.220.27.67';
+    // Caché para evitar errores de map y lentitud
+    let store = { materias: [], periodos: [], docentes: [], grupos: [] };
+
+    // Función para extraer arrays de respuestas paginadas
+    function extractArray(res) {
+      return Array.isArray(res) ? res : (res.data || res.items || []);
+    }
+
+    // Inicialización al cargar la ventana
+    window.onload = async () => {
+      if (!localStorage.getItem('access_token')) window.location.href = 'login.html';
+      await preCargarTodo();
+      cargarPeriodos();
+    };
+
+    async function preCargarTodo() {
+      try {
+        // Carga en paralelo para mayor velocidad
+        const [resM, resP, resD, resG] = await Promise.all([
+          fetchConRefresh(`${API_URL}/api/catalog/subjects`),
+          fetchConRefresh(`${API_URL}/api/schedule/periods`),
+          fetchConRefresh(`${API_URL}/api/users/teachers`),
+          fetchConRefresh(`${API_URL}/api/schedule/groups`)
+        ]);
+
+        if (resM.ok) store.materias = extractArray(await resM.json());
+        if (resP.ok) store.periodos = extractArray(await resP.json());
+        if (resD.ok) store.docentes = extractArray(await resD.json());
+        if (resG.ok) store.grupos = extractArray(await resG.json());
+
+        actualizarSelects();
+      } catch (e) { console.error("Fallo en la precarga:", e); }
+    }
+
+    function actualizarSelects() {
+      // Llenar select de materias
+      const gMateria = document.getElementById('g_materia');
+      gMateria.innerHTML = '<option value="">-- Selecciona --</option>' + 
+        store.materias.map(m => `<option value="${m.id_materia}">${m.clave} - ${m.nombre}</option>`).join('');
+
+      // Llenar select de periodos
+      const gPeriodo = document.getElementById('g_periodo');
+      const periodOptions = store.periodos.map(p => `<option value="${p.id_periodo}">${p.clave}</option>`).join('');
+      gPeriodo.innerHTML = '<option value="">-- Selecciona --</option>' + periodOptions;
+
+      // Llenar select de docentes
+      const lDocente = document.getElementById('l_docente');
+      lDocente.innerHTML = '<option value="">-- Selecciona --</option>' + 
+        store.docentes.map(d => `<option value="${d.id_docente}">${d.nombre} ${d.apellido_paterno}</option>`).join('');
+
+      // Llenar select master de grupos
+      const selMaster = document.getElementById('sel_grupo_logistica');
+      selMaster.innerHTML = '<option value="">Selecciona un grupo...</option>' + 
+        store.grupos.map(g => `<option value="${g.id_grupo}">${g.clave_grupo || g.id_grupo}</option>`).join('');
+    }
+
+    function switchSection(secId, btnElem) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(secId).classList.add('active');
+      btnElem.classList.add('active');
+      
+      if(secId === 'sec-periodos') cargarPeriodos();
+      if(secId === 'sec-grupos') cargarGrupos();
+      if(secId === 'sec-horarios') preCargarTodo(); // Refrescar para logística
+    }
+
+    /* --- LÓGICA DE PERIODOS --- */
+    async function cargarPeriodos() {
+      const tbody = document.getElementById('tabla-periodos');
+      const res = await fetchConRefresh(`${API_URL}/api/schedule/periods`);
+      if (res.ok) {
+        const data = extractArray(await res.json());
+        tbody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.id_periodo}</td>
+            <td style="color:#fbbf24; font-weight:bold;">${p.clave}</td>
+            <td>${p.fecha_inicio.split('T')[0]} / ${p.fecha_fin.split('T')[0]}</td>
+            <td>${p.tipo}</td>
+            <td><span class="status-badge ${p.estado === 'Activo' ? 'bg-green' : 'bg-gray'}">${p.estado}</span></td>
+          </tr>`).join('');
+      }
+    }
+
+    document.getElementById('form-periodo').onsubmit = async (e) => {
+      e.preventDefault();
+      const payload = {
+        clave: document.getElementById('p_clave').value,
+        fecha_inicio: document.getElementById('p_inicio').value,
+        fecha_fin: document.getElementById('p_fin').value,
+        tipo: document.getElementById('p_tipo').value
+      };
+      const res = await fetchConRefresh(`${API_URL}/api/schedule/periods`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) { alert("Periodo creado"); cargarPeriodos(); e.target.reset(); }
+    };
+
+    /* --- LÓGICA DE GRUPOS --- */
+    async function cargarGrupos() {
+      const tbody = document.getElementById('tabla-grupos');
+      const res = await fetchConRefresh(`${API_URL}/api/schedule/groups`);
+      if (res.ok) {
+        const data = extractArray(await res.json());
+        tbody.innerHTML = data.map(g => `
+          <tr>
+            <td style="font-family: monospace; color:#93c5fd;">${g.id_grupo}</td>
+            <td><strong>${g.clave_grupo || g.id_grupo}</strong></td>
+            <td>ID: ${g.id_materia}</td>
+            <td>${g.turno}</td>
+            <td>${g.inscritos || 0} / ${g.cupo_max}</td>
+          </tr>`).join('');
+      }
+    }
+
+    document.getElementById('form-grupo').onsubmit = async (e) => {
+      e.preventDefault();
+      const payload = {
+        id_materia: parseInt(document.getElementById('g_materia').value),
+        id_periodo: parseInt(document.getElementById('g_periodo').value),
+        clave_grupo: document.getElementById('g_clave').value,
+        cupo_max: parseInt(document.getElementById('g_cupo').value),
+        turno: document.getElementById('g_turno').value
+      };
+      const res = await fetchConRefresh(`${API_URL}/api/schedule/groups`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) { alert("Grupo creado"); cargarGrupos(); e.target.reset(); }
+    };
+
+    /* --- LÓGICA DE LOGÍSTICA --- */
+    function seleccionarGrupoLogistica() {
+      const val = document.getElementById('sel_grupo_logistica').value;
+      document.getElementById('panel-logistica').style.display = val ? 'grid' : 'none';
+    }
+
+    document.getElementById('form-asignar-docente').onsubmit = async (e) => {
+      e.preventDefault();
+      const idG = document.getElementById('sel_grupo_logistica').value;
+      const res = await fetchConRefresh(`${API_URL}/api/schedule/groups/${idG}/teacher`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_docente: parseInt(document.getElementById('l_docente').value) })
+      });
+      if (res.ok) alert("Docente vinculado");
+    };
+
+    document.getElementById('form-agregar-horario').onsubmit = async (e) => {
+      e.preventDefault();
+      const idG = document.getElementById('sel_grupo_logistica').value;
+      const payload = {
+        dia: document.getElementById('h_dia').value,
+        hora_inicio: document.getElementById('h_inicio').value,
+        hora_fin: document.getElementById('h_fin').value,
+        aula_desc: document.getElementById('h_aula').value
+      };
+      const res = await fetchConRefresh(`${API_URL}/api/schedule/groups/${idG}/schedules`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) { alert("Horario añadido"); e.target.reset(); }
+      else alert("Conflicto detectado en aula/horario");
+    };
+
+    document.getElementById('btnLogout').onclick = () => { localStorage.clear(); window.location.href = 'login.html'; };
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo Institucional - SAES Cloud</title>
+  <link rel="stylesheet" href="nocturno.css">
+</head>
+<body>
+
+  <header>
+    <h1>⬡ SAES Cloud - Directorio Institucional</h1>
+    <button class="btn-secondary" onclick="window.history.back()">Volver al Panel</button>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('carreras', this)">Carreras</button>
+      <button class="tab-btn" onclick="switchTab('materias', this)">Materias</button>
+      <button class="tab-btn" onclick="switchTab('grupos', this)">Grupos Ofertados</button>
+    </div>
+
+    <div id="carreras" class="tab-content active">
+      <div class="card">
+        <h2>Carreras Disponibles</h2>
+        <table id="tabla-carreras">
+          <thead><tr><th>ID</th><th>Clave</th><th>Nombre de la Carrera</th><th>Duración</th></tr></thead>
+          <tbody><tr><td colspan="4">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="materias" class="tab-content" style="display: none;">
+      <div class="card">
+        <h2>Catálogo de Materias</h2>
+        <table id="tabla-materias">
+          <thead><tr><th>Clave</th><th>Materia</th><th>Créditos</th><th>H. Teoría</th><th>H. Práctica</th></tr></thead>
+          <tbody><tr><td colspan="5">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="grupos" class="tab-content" style="display: none;">
+      <div class="card">
+        <h2>Grupos Ofertados</h2>
+        <table id="tabla-grupos">
+          <thead><tr><th>ID Grupo</th><th>Clave</th><th>Materia ID</th><th>Turno</th><th>Inscritos / Cupo</th></tr></thead>
+          <tbody><tr><td colspan="5">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const BASE_URL = 'http://20.220.27.67';
+
+    if (!localStorage.getItem('access_token')) {
+      alert("Debes iniciar sesión para ver el catálogo.");
+      window.location.href = 'login.html';
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).style.display = 'block';
+      btn.classList.add('active');
+    }
+
+    // Función genérica para consumir los microservicios de lectura
+    async function cargarDatos(endpoint, tablaId, callbackPintar) {
+      const tbody = document.querySelector(`#${tablaId} tbody`);
+      tbody.innerHTML = `<tr><td colspan="5">Consultando base de datos...</td></tr>`;
+      
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}${endpoint}`);
+        if (response.ok) {
+          const data = await response.json();
+          tbody.innerHTML = '';
+          callbackPintar(data, tbody);
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5">Error al cargar datos.</td></tr>`;
+        }
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="5">Error de red.</td></tr>`;
+      }
+    }
+
+    function pintarCarreras(data, tbody) {
+      if(data.length === 0) return tbody.innerHTML = '<tr><td colspan="4">No hay carreras.</td></tr>';
+      data.forEach(c => tbody.innerHTML += `<tr><td>${c.id_carrera || '-'}</td><td style="color: var(--acento-amarillo); font-weight: bold;">${c.clave}</td><td>${c.nombre}</td><td>${c.duracion_semestres} Semestres</td></tr>`);
+    }
+
+    function pintarMaterias(data, tbody) {
+      if(data.length === 0) return tbody.innerHTML = '<tr><td colspan="5">No hay materias.</td></tr>';
+      data.forEach(m => tbody.innerHTML += `<tr><td style="font-family: monospace; color: var(--acento-azul);">${m.clave}</td><td><strong>${m.nombre}</strong></td><td>${m.creditos}</td><td>${m.horas_teoria} hrs</td><td>${m.horas_practica} hrs</td></tr>`);
+    }
+
+    function pintarGrupos(data, tbody) {
+      if(data.length === 0) return tbody.innerHTML = '<tr><td colspan="5">No hay grupos.</td></tr>';
+      data.forEach(g => tbody.innerHTML += `<tr><td>${g.id_grupo}</td><td><strong>${g.clave_grupo || g.clave || 'S/C'}</strong></td><td>ID: ${g.id_materia}</td><td>${g.turno}</td><td>${g.inscritos || 0} / ${g.cupo_max}</td></tr>`);
+    }
+
+    // Carga inicial
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarDatos('/api/catalog/careers', 'tabla-carreras', pintarCarreras);
+      cargarDatos('/api/catalog/subjects', 'tabla-materias', pintarMaterias);
+      cargarDatos('/api/schedule/groups', 'tabla-grupos', pintarGrupos);
+    });
+  </script>
+</body>
+</html>

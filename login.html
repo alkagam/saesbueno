@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - SAES Cloud</title>
+  <link rel="stylesheet" href="nocturno.css">
+  <style>
+    /* --- MEJORAS VISUALES EXCLUSIVAS DEL LOGIN --- */
+    
+    /* 1. Fondo de Cuadrícula "Cloud" */
+    body.login-body {
+      background-color: var(--fondo);
+      background-image: 
+        linear-gradient(rgba(42, 47, 69, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(42, 47, 69, 0.3) 1px, transparent 1px);
+      background-size: 30px 30px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Viñeta oscura para enfocar el centro */
+    body.login-body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at center, transparent 0%, var(--fondo) 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 2. Tarjeta Refinada */
+    .login-card {
+      position: relative;
+      z-index: 1;
+      background: rgba(24, 28, 39, 0.6); /* Más transparente para que luzca el fondo */
+      border-top: 4px solid var(--ipn-guinda);
+      padding: 40px 50px;
+      width: 100%;
+      max-width: 420px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* 3. Branding (Logotipo) */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+    .brand-icon {
+      font-size: 42px;
+      color: var(--ipn-guinda);
+      text-shadow: 0 0 15px var(--ipn-guinda-glow);
+      margin-bottom: 10px;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+    }
+    .brand-header h2 {
+      border: none;
+      padding: 0;
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+    .brand-header p {
+      color: var(--texto-secundario);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+      100% { transform: translateY(0px); }
+    }
+
+    /* 4. Inputs con Iconos Integrados */
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrapper svg {
+      position: absolute;
+      left: 14px;
+      width: 18px;
+      height: 18px;
+      color: var(--texto-secundario);
+      transition: color 0.3s ease;
+    }
+    .input-wrapper input {
+      padding-left: 42px; /* Espacio para el icono */
+      height: 48px;
+    }
+    
+    /* El icono se ilumina cuando seleccionas el input */
+    .input-wrapper input:focus + svg,
+    .input-wrapper input:focus ~ svg.icon-main {
+      color: var(--acento-azul);
+    }
+
+    /* Ojito de la contraseña ajustado */
+    .toggle-password {
+      position: absolute;
+      right: 14px;
+      background: none;
+      border: none;
+      color: var(--texto-secundario);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 0;
+    }
+    .toggle-password:hover { color: var(--texto-principal); }
+
+    /* Botón más imponente */
+    .btn-submit-login {
+      height: 48px;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 15px;
+      background: linear-gradient(135deg, var(--ipn-guinda) 0%, #4a0024 100%);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-submit-login:hover {
+      background: linear-gradient(135deg, var(--ipn-guinda-hover) 0%, var(--ipn-guinda) 100%);
+      transform: translateY(-2px);
+    }
+
+    #mensaje {
+      margin-top: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body class="login-body">
+
+  <div class="login-card glow">
+    
+    <div class="brand-header">
+      <span class="brand-icon">⬡</span>
+      <h2>SAES Cloud</h2>
+      <p>Acceso seguro al sistema institucional</p>
+    </div>
+
+    <form id="formLogin">
+      
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="identifier">Identificador</label>
+        <div class="input-wrapper">
+          <input type="text" id="identifier" placeholder="Boleta o Num. Empleado" autocomplete="username" required>
+          <svg class="icon-main" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 24px;">
+        <label for="password">Contraseña</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
+          <svg class="icon-main" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          
+          <button type="button" id="toggleBtn" class="toggle-password" tabindex="-1" title="Mostrar contraseña">
+            <svg id="eyeIcon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" id="btnSubmit" class="btn-primary btn-submit-login" style="width: 100%;">Iniciar Sesión</button>
+    </form>
+
+    <div id="mensaje"></div>
+  </div>
+
+  <script>
+    // 1. Funcionalidad para mostrar/ocultar contraseña (Ahora usando SVG para que se vea premium)
+    const toggleBtn = document.getElementById('toggleBtn');
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    // SVGs para ojo abierto y cerrado
+    const eyeOpenSVG = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+    const eyeClosedSVG = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+
+    toggleBtn.addEventListener('click', () => {
+      const isPassword = passwordInput.getAttribute('type') === 'password';
+      passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+      eyeIcon.innerHTML = isPassword ? eyeClosedSVG : eyeOpenSVG;
+    });
+
+    // 2. Lógica Principal de Autenticación
+    document.getElementById('formLogin').addEventListener('submit', async function(event) {
+      event.preventDefault(); 
+
+      const identifier = document.getElementById('identifier').value;
+      const password = passwordInput.value;
+      const mensajeDiv = document.getElementById('mensaje');
+      const btnSubmit = document.getElementById('btnSubmit');
+
+      // Interfaz en modo de carga
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Autenticando...';
+      mensajeDiv.className = '';
+      mensajeDiv.style.color = 'var(--texto-secundario)';
+      mensajeDiv.textContent = 'Conectando con el servidor...';
+
+      try {
+        const loginResponse = await fetch('http://20.220.27.67/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: identifier, password: password })
+        });
+
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json();
+          
+          localStorage.setItem('access_token', loginData.access_token);
+          localStorage.setItem('refresh_token', loginData.refresh_token);
+          
+          mensajeDiv.style.color = 'var(--acento-amarillo)';
+          mensajeDiv.textContent = 'Verificando permisos...';
+
+          const meResponse = await fetch('http://20.220.27.67/api/users/me', {
+            headers: { 'Authorization': `Bearer ${loginData.access_token}` }
+          });
+
+          if (meResponse.ok) {
+            const meData = await meResponse.json();
+            
+            localStorage.setItem('id_usuario', meData.id_usuario);
+            if (meData.id_alumno) localStorage.setItem('id_alumno', meData.id_alumno);
+            if (meData.id_docente) localStorage.setItem('id_docente', meData.id_docente);
+
+            mensajeDiv.className = 'status-ok';
+            mensajeDiv.textContent = `¡Hola, ${meData.rol}! Entrando al sistema...`;
+            btnSubmit.textContent = '¡Acceso Concedido!';
+            btnSubmit.style.background = 'var(--estado-exito)';
+
+            setTimeout(() => {
+              const rutas = {
+                'alumno': 'alumno.html',
+                'docente': 'docente.html',
+                'dae': 'dae.html',
+                'gestion': 'gestion.html',
+                'root': 'root.html'
+              };
+              
+              const destino = rutas[meData.rol];
+              
+              if (destino) {
+                window.location.href = destino;
+              } else {
+                mensajeDiv.className = 'status-fail';
+                mensajeDiv.textContent = 'Error: Rol no tiene un panel asignado.';
+                restaurarBoton(btnSubmit);
+              }
+            }, 1000);
+
+          } else {
+            mensajeDiv.className = 'status-fail';
+            mensajeDiv.textContent = 'No se pudo verificar la identidad del usuario.';
+            restaurarBoton(btnSubmit);
+          }
+
+        } else {
+          mensajeDiv.className = 'status-fail'; 
+          mensajeDiv.textContent = 'Credenciales incorrectas. Intenta de nuevo.';
+          restaurarBoton(btnSubmit);
+        }
+
+      } catch (error) {
+        mensajeDiv.className = 'status-fail';
+        mensajeDiv.textContent = 'Fallo de red. Verifica la VPN o el estado de la API.';
+        console.error('Error de Fetch:', error);
+        restaurarBoton(btnSubmit);
+      }
+    });
+
+    function restaurarBoton(boton) {
+      boton.disabled = false;
+      boton.textContent = 'Iniciar Sesión';
+      boton.style.background = ''; 
+    }
+  </script>
+
+</body>
+</html>

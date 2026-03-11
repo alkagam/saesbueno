@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Docentes - SAES Cloud</title>
+  <link rel="stylesheet" href="nocturno.css">
+  <style>
+    /* Estilo específico para inputs pequeños en la tabla de calificaciones */
+    .input-calificacion {
+      width: 60px;
+      text-align: center;
+      padding: 6px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>⬡ SAES Cloud - Portal del Docente</h1>
+    <div>
+      <button class="btn btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <div class="container">
+    
+    <div class="card perfil-card glow">
+      <div class="perfil-avatar">💼</div>
+      <div class="perfil-info">
+        <h2 id="p_nombre">Cargando tu información...</h2>
+        <p id="p_empleado" class="perfil-id">Num. Empleado: ---------</p>
+        
+        <div class="perfil-grid">
+          <div class="perfil-item"><span>Correo:</span> <span id="p_correo">--</span></div>
+          <div class="perfil-item"><span>Teléfono:</span> <span id="p_telefono">--</span></div>
+        </div>
+
+        <p id="p_detalles" class="perfil-detalles">
+          Contrato: -- | Categoría: -- | Estado: --
+        </p>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 24px; text-align: right;">
+      <a href="catalogo.html" class="btn btn-secondary" style="font-size: 13px;">Explorar Directorio Institucional</a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; align-items: flex-start;">
+      
+      <div class="card" style="padding: 20px;">
+        <h2>Mis Grupos Asignados</h2>
+        <div id="lista-grupos" style="display: flex; flex-direction: column; gap: 8px;">
+          <p style="font-size: 0.9rem; color: var(--texto-secundario);">Cargando grupos...</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 id="titulo-grupo" style="border-bottom-color: var(--acento-azul);">Selecciona un grupo para ver tus alumnos</h2>
+        
+        <div class="table-container">
+          <table id="tabla-contenedor">
+            <thead>
+              <tr>
+                <th>ID Inscripción</th>
+                <th>Alumno</th>
+                <th>Parcial 1</th>
+                <th>Parcial 2</th>
+                <th>Parcial 3</th>
+                <th>Definitiva</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-alumnos">
+              <tr><td colspan="8" style="text-align:center; color: var(--texto-secundario);">Selecciona un grupo en el menú de la izquierda.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="api.js"></script>
+
+  <script>
+    const BASE_URL = 'http://20.220.27.67';
+    
+    // 1. Verificación de Seguridad
+    const idDocente = localStorage.getItem('id_docente');
+
+    if (!localStorage.getItem('access_token') || !idDocente) {
+      alert("Acceso denegado. Inicia sesión como docente.");
+      window.location.href = 'login.html';
+    }
+
+    // Diccionario para traducir ID de materia a nombre real
+    let mapMaterias = {};
+
+    /* =========================================
+       0. CARGAR DATOS DEL PERFIL DEL DOCENTE
+       ========================================= */
+    async function cargarMiPerfil() {
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/users/teachers/${idDocente}`);
+        
+        if (response.ok) {
+          const docente = await response.json();
+          
+          document.getElementById('p_nombre').textContent = `${docente.nombre} ${docente.apellido_paterno} ${docente.apellido_materno || ''}`;
+          document.getElementById('p_empleado').textContent = `Num. Empleado: ${docente.num_empleado}`;
+          
+          document.getElementById('p_correo').textContent = docente.correo_institucional || '--';
+          document.getElementById('p_telefono').textContent = docente.telefono || '--';
+          
+          const estadoStr = docente.activo !== false ? '<span class="status-ok">Activo</span>' : '<span class="status-fail">Inactivo</span>';
+          
+          document.getElementById('p_detalles').innerHTML = `
+            Contrato: <strong>${docente.tipo_contrato || 'No especificado'}</strong> &nbsp;·&nbsp; 
+            Categoría: <strong>${docente.categoria || 'N/A'}</strong> &nbsp;·&nbsp; 
+            Estado: ${estadoStr}
+          `;
+        }
+      } catch (error) {
+        console.error("Error al cargar el perfil del docente:", error);
+      }
+    }
+
+    /* =========================================
+       1. CARGAR DICCIONARIO DE MATERIAS
+       ========================================= */
+    async function cargarDiccionarioMaterias() {
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/catalog/subjects`);
+        if (response.ok) {
+          const resJson = await response.json();
+          const materias = Array.isArray(resJson) ? resJson : (resJson.data || resJson.items || []);
+          materias.forEach(m => mapMaterias[m.id_materia] = m.nombre);
+        }
+      } catch (error) { console.error("Error cargando materias"); }
+    }
+
+    /* =========================================
+       2. OBTENER GRUPOS DEL DOCENTE
+       ========================================= */
+    async function cargarMisGrupos() {
+      const contenedor = document.getElementById('lista-grupos');
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/schedule/groups?id_docente=${idDocente}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          const grupos = Array.isArray(data) ? data : (data.data || data.items || []);
+
+          if (grupos.length === 0) {
+            contenedor.innerHTML = '<p style="font-size:13px; color:var(--texto-secundario);">No tienes grupos asignados.</p>';
+            return;
+          }
+
+          contenedor.innerHTML = '';
+          grupos.forEach(grupo => {
+            const div = document.createElement('button');
+            div.className = 'nav-btn'; // Reutilizamos el estilo de botones laterales
+            div.style.borderLeftWidth = '4px'; // Un poco más grueso para que destaque
+            div.onclick = () => cargarAlumnos(grupo.id_grupo, div);
+            
+            // Traducimos el nombre de la materia
+            const nombreMateria = mapMaterias[grupo.id_materia] || `Materia ${grupo.id_materia}`;
+
+            div.innerHTML = `
+              <div style="font-weight: 700; font-size: 13px; color: var(--ipn-blanco); margin-bottom: 2px;">
+                ${nombreMateria}
+              </div>
+              <div style="font-size: 11px; color: var(--texto-secundario); display: flex; justify-content: space-between;">
+                <span>Gpo: ${grupo.clave_grupo || grupo.id_grupo}</span>
+                <span>Cupo: ${grupo.inscritos || 0}/${grupo.cupo_max}</span>
+              </div>
+            `;
+            contenedor.appendChild(div);
+          });
+        }
+      } catch (error) {
+        contenedor.innerHTML = '<p style="color:var(--estado-error); font-size:13px;">Error al cargar tus grupos.</p>';
+      }
+    }
+
+    /* =========================================
+       3. OBTENER ALUMNOS Y CALIFICACIONES
+       ========================================= */
+    async function cargarAlumnos(idGrupo, elementoClickeado) {
+      // Efecto visual de selección en el menú lateral
+      document.querySelectorAll('#lista-grupos .nav-btn').forEach(el => el.classList.remove('active'));
+      elementoClickeado.classList.add('active');
+      
+      document.getElementById('titulo-grupo').textContent = `Lista de Alumnos - Grupo ${idGrupo}`;
+      
+      const tbody = document.getElementById('tabla-alumnos');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--texto-secundario);">Cargando alumnos...</td></tr>';
+
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/grades/grades/groups/${idGrupo}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          const alumnos = Array.isArray(data) ? data : (data.data || data.items || []);
+
+          if (alumnos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--texto-secundario);">No hay alumnos inscritos en este grupo aún.</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = '';
+          alumnos.forEach(alumno => {
+            let estadoHtml = '<span class="status-badge bg-gray">En curso</span>';
+            if (alumno.acreditada === true) estadoHtml = '<span class="status-badge bg-green">Aprobado</span>';
+            if (alumno.acreditada === false) estadoHtml = '<span class="status-badge bg-red">Reprobado</span>';
+
+            tbody.innerHTML += `
+              <tr>
+                <td style="font-family: monospace; color: var(--acento-azul);">${alumno.id_inscripcion}</td>
+                <td><strong>${alumno.nombre || `Alumno ${alumno.id_alumno}`}</strong></td>
+                <td><input type="number" id="p1_${alumno.id_inscripcion}" class="input-calificacion" step="0.1" min="0" max="10" value="${alumno.parcial_1 ?? ''}"></td>
+                <td><input type="number" id="p2_${alumno.id_inscripcion}" class="input-calificacion" step="0.1" min="0" max="10" value="${alumno.parcial_2 ?? ''}"></td>
+                <td><input type="number" id="p3_${alumno.id_inscripcion}" class="input-calificacion" step="0.1" min="0" max="10" value="${alumno.parcial_3 ?? ''}"></td>
+                <td style="font-weight:bold; color: var(--ipn-blanco);">${alumno.definitiva ?? '-'}</td>
+                <td>${estadoHtml}</td>
+                <td>
+                  <button class="btn btn-action" style="padding: 6px 12px; font-size: 11px;" onclick="guardarCalificacion(${alumno.id_inscripcion}, ${idGrupo}, this)">Guardar</button>
+                </td>
+              </tr>
+            `;
+          });
+        }
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:var(--estado-error); text-align:center;">Error al cargar la lista de alumnos.</td></tr>';
+      }
+    }
+
+    /* =========================================
+       4. ACTUALIZAR CALIFICACIÓN (PUT)
+       ========================================= */
+    async function guardarCalificacion(idInscripcion, idGrupo, botonElem) {
+      const textoOriginal = botonElem.textContent;
+      const bgOriginal = botonElem.style.backgroundColor;
+      
+      botonElem.textContent = "...";
+      botonElem.disabled = true;
+
+      const val1 = document.getElementById(`p1_${idInscripcion}`).value;
+      const val2 = document.getElementById(`p2_${idInscripcion}`).value;
+      const val3 = document.getElementById(`p3_${idInscripcion}`).value;
+
+      const payload = {
+        parcial_1: val1 !== "" ? parseFloat(val1) : null,
+        parcial_2: val2 !== "" ? parseFloat(val2) : null,
+        parcial_3: val3 !== "" ? parseFloat(val3) : null
+      };
+
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/grades/grades/${idInscripcion}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          botonElem.style.backgroundColor = "var(--estado-exito)";
+          botonElem.textContent = "✔ Guardado";
+          
+          // Recargamos la tabla para ver el nuevo promedio y estatus
+          setTimeout(() => {
+            const grupoActivo = document.querySelector('#lista-grupos .nav-btn.active');
+            cargarAlumnos(idGrupo, grupoActivo);
+          }, 1000);
+
+        } else {
+          const err = await response.json().catch(()=>({}));
+          alert(`Error al guardar: ${err.message || 'Verifica tus permisos'}`);
+          botonElem.textContent = textoOriginal;
+          botonElem.style.backgroundColor = bgOriginal;
+          botonElem.disabled = false;
+        }
+      } catch (error) {
+        alert("Error de red al intentar guardar.");
+        botonElem.textContent = textoOriginal;
+        botonElem.style.backgroundColor = bgOriginal;
+        botonElem.disabled = false;
+      }
+    }
+
+    // Cerrar Sesión
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+
+    // Secuencia de arranque
+    async function initApp() {
+      await cargarMiPerfil();
+      await cargarDiccionarioMaterias(); // Primero bajamos los nombres de las materias
+      await cargarMisGrupos();           // Luego pintamos los botones de los grupos
+    }
+
+    initApp();
+  </script>
+
+</body>
+</html>

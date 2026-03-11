@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal DAE - SAES Cloud</title>
+  <link rel="stylesheet" href="nocturno.css">
+</head>
+<body class="has-sidebar">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>⬡ DAE</h1>
+      <p>Administración Escolar</p>
+    </div>
+    
+    <nav style="display: flex; flex-direction: column; gap: 8px; padding: 0 10px;">
+      <button class="nav-btn active" onclick="switchSection('sec-alumnos', this)">Gestión de Alumnos</button>
+      <button class="nav-btn" onclick="switchSection('sec-docentes', this)">Gestión de Docentes</button>
+      <button class="nav-btn" onclick="switchSection('sec-catalogo', this)">Catálogo (Materias)</button>
+    </nav>
+    
+    <div class="logout-container">
+      <button class="btn btn-logout" id="btnLogout" style="width: 100%;">Cerrar Sesión</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <div id="sec-alumnos" class="section active">
+      <div class="card">
+        <h2 style="color: var(--acento-azul);">Alta de Nuevo Alumno</h2>
+        <form id="form-alta-alumno">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Boleta</label>
+              <input type="text" id="a_boleta" required placeholder="Ej. 2024630001">
+            </div>
+            <div class="form-group">
+              <label>Nombre(s)</label>
+              <input type="text" id="a_nombre" required>
+            </div>
+            <div class="form-group">
+              <label>Apellido Paterno</label>
+              <input type="text" id="a_paterno" required>
+            </div>
+            <div class="form-group">
+              <label>Apellido Materno</label>
+              <input type="text" id="a_materno">
+            </div>
+            <div class="form-group">
+              <label>CURP</label>
+              <input type="text" id="a_curp" maxlength="18" required>
+            </div>
+            <div class="form-group">
+              <label>Correo Institucional</label>
+              <input type="email" id="a_correo" required>
+            </div>
+            <div class="form-group">
+              <label>Fecha Nacimiento</label>
+              <input type="date" id="a_nacimiento" required>
+            </div>
+            <div class="form-group">
+              <label>Sexo</label>
+              <select id="a_sexo" required>
+                <option value="M">Masculino (M)</option>
+                <option value="F">Femenino (F)</option>
+                <option value="NB">No Binario (NB)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>ID Carrera</label>
+              <input type="number" id="a_carrera" required value="1">
+            </div>
+            <div class="form-group">
+              <label>Turno</label>
+              <select id="a_turno" required>
+                <option value="Matutino">Matutino</option>
+                <option value="Vespertino">Vespertino</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Semestre</label>
+              <input type="number" id="a_semestre" required value="1" min="1">
+            </div>
+            <div class="form-group">
+              <label>Contraseña Inicial</label>
+              <input type="password" id="a_password" required placeholder="••••••••">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-action" style="margin-top: 20px;">Registrar Alumno</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Directorio de Alumnos</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Boleta</th>
+                <th>Nombre Completo</th>
+                <th>Carrera</th>
+                <th>Semestre</th>
+                <th>Situación</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-alumnos">
+              <tr><td colspan="5">Cargando directorio...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-docentes" class="section">
+      <div class="card">
+        <h2 style="color: var(--acento-amarillo);">Alta de Nuevo Docente</h2>
+        <form id="form-alta-docente">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Núm. Empleado</label>
+              <input type="text" id="d_empleado" required placeholder="Ej. 2024TX001">
+            </div>
+            <div class="form-group">
+              <label>Nombre(s)</label>
+              <input type="text" id="d_nombre" required>
+            </div>
+            <div class="form-group">
+              <label>Apellido Paterno</label>
+              <input type="text" id="d_paterno" required>
+            </div>
+            <div class="form-group">
+              <label>Apellido Materno</label>
+              <input type="text" id="d_materno">
+            </div>
+            <div class="form-group">
+              <label>Correo</label>
+              <input type="email" id="d_correo" required>
+            </div>
+            <div class="form-group">
+              <label>Tipo Contrato</label>
+              <select id="d_contrato">
+                <option value="Base">Base</option>
+                <option value="Interinato">Interinato</option>
+                <option value="Honorarios">Honorarios</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Contraseña Acceso</label>
+              <input type="password" id="d_password" required placeholder="••••••••">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-action" style="background-color: var(--acento-amarillo); color: black;">Registrar Docente</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Listado de Docentes</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Núm. Empleado</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Contrato</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-docentes">
+              <tr><td colspan="5">Cargando docentes...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="sec-catalogo" class="section">
+      <div class="card">
+        <h2 style="color: var(--estado-exito);">Añadir Materia al Sistema</h2>
+        <form id="form-alta-materia">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Clave</label>
+              <input type="text" id="m_clave" required placeholder="Ej. MAT-101">
+            </div>
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="m_nombre" required>
+            </div>
+            <div class="form-group">
+              <label>Créditos</label>
+              <input type="number" id="m_creditos" value="8">
+            </div>
+            <div class="form-group">
+              <label>Horas (Teoría / Práctica)</label>
+              <div style="display: flex; gap:10px;">
+                <input type="number" id="m_teoria" value="3" placeholder="T" style="width:50%;">
+                <input type="number" id="m_practica" value="1.5" step="0.5" placeholder="P" style="width:50%;">
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-action" style="background-color: var(--estado-exito);">Guardar Materia</button>
+        </form>
+      </div>
+      
+      <div class="card">
+        <h2>Catálogo de Materias Oficial</h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr><th>Clave</th><th>Nombre</th><th>Créditos</th><th>Horas (T/P)</th></tr>
+            </thead>
+            <tbody id="tabla-materias">
+              <tr><td colspan="4">Cargando catálogo...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="api.js"></script>
+  <script>
+    const BASE_URL = 'http://20.220.27.67';
+
+    // 1. Seguridad inicial
+    if (!localStorage.getItem('access_token')) {
+      window.location.href = 'login.html';
+    }
+
+    // Navegación Sidebar
+    function switchSection(secId, btnElem) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(secId).classList.add('active');
+      btnElem.classList.add('active');
+      
+      if(secId === 'sec-alumnos') cargarAlumnos();
+      if(secId === 'sec-docentes') cargarDocentes();
+      if(secId === 'sec-catalogo') cargarMaterias();
+    }
+
+    /* =========================================
+       ALUMNOS: POST Y GET
+       ========================================= */
+    document.getElementById('form-alta-alumno').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        boleta: document.getElementById('a_boleta').value,
+        nombre: document.getElementById('a_nombre').value,
+        apellido_paterno: document.getElementById('a_paterno').value,
+        apellido_materno: document.getElementById('a_materno').value,
+        curp: document.getElementById('a_curp').value,
+        correo_institucional: document.getElementById('a_correo').value,
+        fecha_nacimiento: document.getElementById('a_nacimiento').value,
+        sexo: document.getElementById('a_sexo').value,
+        id_carrera: parseInt(document.getElementById('a_carrera').value),
+        turno: document.getElementById('a_turno').value,
+        semestre_actual: parseInt(document.getElementById('a_semestre').value),
+        fecha_ingreso: new Date().toISOString().split('T')[0],
+        password: document.getElementById('a_password').value
+      };
+
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/users/students`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          alert("¡Alumno registrado!");
+          e.target.reset();
+          cargarAlumnos();
+        } else {
+          const err = await response.json().catch(()=>({message:"Error desconocido"}));
+          alert("Error: " + (err.detail || err.message));
+        }
+      } catch (error) { alert("Error de red."); }
+    });
+
+    async function cargarAlumnos() {
+      const tbody = document.getElementById('tabla-alumnos');
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/users/students`);
+        if (response.ok) {
+          const data = await response.json();
+          const alumnos = Array.isArray(data) ? data : (data.data || data.items || []);
+          tbody.innerHTML = alumnos.map(a => `
+            <tr>
+              <td style="font-family: monospace; color:var(--acento-azul);">${a.boleta}</td>
+              <td><strong>${a.nombre} ${a.apellido_paterno}</strong></td>
+              <td>Carrera ${a.id_carrera}</td>
+              <td>${a.semestre_actual}º</td>
+              <td><span class="status-badge ${a.situacion === 'Regular' ? 'bg-green' : 'bg-gray'}">${a.situacion}</span></td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Error de conexión.</td></tr>'; }
+    }
+
+    /* =========================================
+       DOCENTES: POST Y GET
+       ========================================= */
+    document.getElementById('form-alta-docente').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        num_empleado: document.getElementById('d_empleado').value,
+        nombre: document.getElementById('d_nombre').value,
+        apellido_paterno: document.getElementById('d_paterno').value,
+        apellido_materno: document.getElementById('d_materno').value,
+        correo_institucional: document.getElementById('d_correo').value,
+        tipo_contrato: document.getElementById('d_contrato').value,
+        password: document.getElementById('d_password').value
+      };
+
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/users/teachers`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          alert("¡Docente registrado!");
+          e.target.reset();
+          cargarDocentes();
+        } else {
+          const err = await response.json().catch(()=>({message:"Error"}));
+          alert("Error: " + (err.detail || err.message));
+        }
+      } catch (error) { alert("Error de conexión."); }
+    });
+
+    async function cargarDocentes() {
+      const tbody = document.getElementById('tabla-docentes');
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/users/teachers`);
+        if (response.ok) {
+          const data = await response.json();
+          const docentes = Array.isArray(data) ? data : (data.data || data.items || []);
+          tbody.innerHTML = docentes.map(d => `
+            <tr>
+              <td style="font-family: monospace; color:var(--acento-amarillo);">${d.num_empleado}</td>
+              <td><strong>${d.nombre} ${d.apellido_paterno}</strong></td>
+              <td>${d.correo_institucional}</td>
+              <td>${d.tipo_contrato}</td>
+              <td><span class="status-badge ${d.activo ? 'bg-green' : 'bg-red'}">${d.activo ? 'Activo' : 'Baja'}</span></td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) { tbody.innerHTML = '<tr><td colspan="5">Error de conexión.</td></tr>'; }
+    }
+
+    /* =========================================
+       MATERIAS: POST Y GET
+       ========================================= */
+    document.getElementById('form-alta-materia').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        clave: document.getElementById('m_clave').value,
+        nombre: document.getElementById('m_nombre').value,
+        creditos: parseInt(document.getElementById('m_creditos').value),
+        horas_teoria: parseFloat(document.getElementById('m_teoria').value),
+        horas_practica: parseFloat(document.getElementById('m_practica').value)
+      };
+
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/catalog/subjects`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          alert("¡Materia guardada!");
+          e.target.reset();
+          cargarMaterias();
+        }
+      } catch (error) { alert("Error de conexión."); }
+    });
+
+    async function cargarMaterias() {
+      const tbody = document.getElementById('tabla-materias');
+      try {
+        const response = await fetchConRefresh(`${BASE_URL}/api/catalog/subjects`);
+        if (response.ok) {
+          const data = await response.json();
+          const materias = Array.isArray(data) ? data : (data.data || data.items || []);
+          tbody.innerHTML = materias.map(m => `
+            <tr>
+              <td style="color:var(--ipn-blanco); font-weight:bold;">${m.clave}</td>
+              <td>${m.nombre}</td>
+              <td>${m.creditos}</td>
+              <td>${m.horas_teoria}T / ${m.horas_practica}P</td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) { tbody.innerHTML = '<tr><td colspan="4">Error de conexión.</td></tr>'; }
+    }
+
+    // Logout
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+
+    // Carga inicial (Pestaña por defecto)
+    cargarAlumnos();
+  </script>
+</body>
+</html>

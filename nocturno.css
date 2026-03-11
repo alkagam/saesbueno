@@ -1,0 +1,325 @@
+/*
+  Hoja de Estilos General - SAES Cloud (Nocturno / Cyber-IPN)
+  Estética: Retro-moderno, Glassmorphism, Dark Mode
+*/
+
+:root {
+  /* Paleta de Colores Principal (IPN) */
+  --ipn-guinda: #660033;
+  --ipn-guinda-hover: #8c0046;
+  --ipn-guinda-glow: rgba(102, 0, 51, 0.6);
+  --ipn-blanco: #FFFFFF;
+
+  /* Paleta de Colores Base (Dark Theme) */
+  --fondo: #0a0c10; /* Ligeramente más oscuro para mayor contraste */
+  --superficie: rgba(24, 28, 39, 0.85); /* Transparencia para efecto cristal */
+  --borde: #2a2f45;
+  --borde-hover: #3b4261;
+  --texto-principal: #f1f5f9;
+  --texto-secundario: #94a3b8;
+
+  /* Colores de Acento y Estado */
+  --acento-azul: #3b82f6;
+  --acento-azul-glow: rgba(59, 130, 246, 0.4);
+  --acento-amarillo: #fbbf24;
+  --estado-exito: #10b981;
+  --estado-error: #ef4444;
+  --estado-error-hover: #dc2626;
+}
+
+/* Animación Refinada: Pulso Cyber-IPN (Guinda -> Violeta -> Azul) */
+@keyframes cyber-pulse-animation {
+  0%   { border-color: var(--ipn-guinda); box-shadow: 0 0 8px var(--ipn-guinda-glow); }
+  50%  { border-color: #7c3aed; box-shadow: 0 0 12px rgba(124, 58, 237, 0.4); }
+  100% { border-color: var(--ipn-guinda); box-shadow: 0 0 8px var(--ipn-guinda-glow); }
+}
+
+@keyframes input-glow {
+  0%   { box-shadow: 0 0 0px var(--acento-azul-glow); }
+  50%  { box-shadow: 0 0 8px var(--acento-azul-glow); }
+  100% { box-shadow: 0 0 0px var(--acento-azul-glow); }
+}
+
+/* --- RESETS Y ESTILOS GLOBALES --- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--fondo);
+  /* Opcional: Descomenta esto para ver el efecto cristal en acción */
+  /* background-image: radial-gradient(circle at top right, #1a0011 0%, transparent 40%), radial-gradient(circle at bottom left, #001122 0%, transparent 40%); */
+  color: var(--texto-principal);
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--fondo); }
+::-webkit-scrollbar-thumb { background: var(--borde); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--texto-secundario); }
+
+/* --- COMPONENTES REUTILIZABLES --- */
+
+/* Contenedores y Layout */
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.main-content {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* Tarjetas (Cards) */
+.card {
+  background: var(--superficie);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Solo las tarjetas con la clase .glow tendrán la animación constante, 
+   las demás brillarán sutilmente al pasar el mouse (hover) */
+.card.glow {
+  animation: cyber-pulse-animation 4s infinite alternate;
+  border-width: 2px;
+}
+
+.card:hover:not(.glow) {
+  transform: translateY(-2px);
+  border-color: var(--borde-hover);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.card h2 {
+  margin-top: 0;
+  color: var(--ipn-blanco);
+  font-size: 18px;
+  border-bottom: 1px solid var(--borde);
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+  letter-spacing: 0.5px;
+}
+ 
+/* Botones */
+.btn, button {
+  display: inline-block;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.btn:active, button:active { transform: translateY(1px); }
+
+.btn-primary, .btn-action {
+  background-color: var(--ipn-guinda);
+  color: var(--ipn-blanco);
+  box-shadow: 0 2px 4px var(--ipn-guinda-glow);
+}
+.btn-primary:hover, .btn-action:hover {
+  background-color: var(--ipn-guinda-hover);
+  box-shadow: 0 4px 8px var(--ipn-guinda-glow);
+}
+
+.btn-danger, .btn-logout { background-color: var(--estado-error); color: var(--ipn-blanco); }
+.btn-danger:hover, .btn-logout:hover { background-color: var(--estado-error-hover); }
+
+.btn-secondary { background-color: var(--borde); color: var(--texto-principal); }
+.btn-secondary:hover { background-color: var(--borde-hover); }
+
+button:disabled {
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  color: var(--texto-secundario);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Formularios */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.form-group { display: flex; flex-direction: column; }
+
+label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--texto-secundario);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+input, select, textarea {
+  width: 100%;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  color: var(--texto-principal);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--acento-azul);
+  animation: input-glow 2s infinite alternate;
+}
+
+/* Tablas */
+.table-container { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  padding: 14px 16px;
+  color: var(--texto-secundario);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--ipn-guinda);
+  white-space: nowrap;
+}
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--borde);
+  font-size: 13px;
+  vertical-align: middle;
+  transition: background 0.2s;
+}
+tr:hover td { background: rgba(42, 47, 69, 0.4); }
+
+/* --- NAVBAR SUPERIOR --- */
+header {
+  background: var(--superficie);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--borde);
+  padding: 16px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--ipn-blanco);
+  letter-spacing: 0.5px;
+}
+
+header div {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Separación perfecta entre el texto y el botón */
+}
+
+/* Pestañas (Tabs) */
+.tabs {
+  display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 1px solid var(--borde);
+  overflow-x: auto; /* Para móviles */
+}
+.tab-btn {
+  background: transparent; border: none; color: var(--texto-secundario);
+  padding: 12px 20px; cursor: pointer; font-size: 14px; font-weight: 600;
+  border-bottom: 3px solid transparent; transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.tab-btn.active { color: var(--acento-azul); border-bottom-color: var(--acento-azul); }
+.tab-btn:hover:not(.active) { color: var(--ipn-blanco); background: rgba(255,255,255,0.03); border-radius: 6px 6px 0 0;}
+.tab-content { display: none; animation: fadeIn 0.4s ease; }
+.tab-content.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Sidebar (DAE, Gestión) */
+body.has-sidebar { display: flex; height: 100vh; overflow: hidden; }
+.sidebar {
+  width: 260px;
+  background: var(--superficie);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid var(--borde);
+  display: flex; flex-direction: column; height: 100vh; flex-shrink: 0;
+}
+.sidebar-header { padding: 24px 20px; border-bottom: 1px solid var(--borde); }
+.sidebar-header h1 { margin: 0; font-size: 18px; color: var(--ipn-blanco); letter-spacing: 1px;}
+.sidebar-header p { margin: 6px 0 0; font-size: 12px; color: var(--acento-azul); text-transform: uppercase; font-weight: bold;}
+
+.nav-btn {
+  background: transparent; border: none; color: var(--texto-secundario);
+  padding: 16px 20px; width: 100%; text-align: left; cursor: pointer;
+  font-size: 14px; font-weight: 600; border-left: 3px solid transparent; transition: all 0.2s;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.02); color: var(--ipn-blanco); }
+.nav-btn.active {
+  background: linear-gradient(90deg, rgba(102,0,51,0.15) 0%, transparent 100%);
+  color: var(--ipn-guinda-hover); border-left-color: var(--ipn-guinda);
+}
+.logout-container { margin-top: auto; padding: 20px; border-top: 1px solid var(--borde); }
+
+/* --- ESTILOS ESPECÍFICOS --- */
+
+/* Login Page */
+.login-body { display: flex; justify-content: center; align-items: center; height: 100vh; }
+.login-card {
+  background: var(--superficie); backdrop-filter: blur(16px);
+  border: 1px solid var(--borde); border-top: 4px solid var(--ipn-guinda);
+  border-radius: 12px; padding: 40px; width: 100%; max-width: 380px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+.login-card h2 { border: none; padding: 0; margin-bottom: 8px; font-size: 24px; }
+.login-card p { color: var(--texto-secundario); font-size: 14px; margin-bottom: 28px; }
+
+/* Perfil Expandido (Alumno/Docente) */
+.perfil-card {
+  display: flex; gap: 24px; align-items: flex-start;
+  border-left: 4px solid var(--acento-azul);
+}
+.perfil-avatar {
+  width: 80px; height: 80px; background: linear-gradient(135deg, var(--borde) 0%, var(--fondo) 100%);
+  border: 1px solid var(--borde); border-radius: 50%; display: flex;
+  align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0; margin-top: 5px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+.perfil-info { flex: 1; }
+.perfil-info h2 { border: none; margin: 0 0 4px 0; padding: 0; font-size: 24px; }
+.perfil-id { margin: 0 0 16px 0; color: var(--acento-azul); font-family: monospace; font-size: 15px; }
+.perfil-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.perfil-item { font-size: 13px; color: var(--texto-secundario); }
+.perfil-item span { color: var(--texto-principal); font-family: monospace; font-size: 14px; margin-left: 6px; }
+.perfil-detalles { margin-top: 20px; font-size: 14px; color: var(--texto-secundario); padding-top: 16px; border-top: 1px solid var(--borde); }
+
+/* Clases de utilidad y Estados */
+.status-ok { color: var(--estado-exito); font-weight: bold; }
+.status-fail { color: var(--estado-error); font-weight: bold; }
+.status-warn { color: var(--acento-amarillo); font-weight: bold; }
+
+.status-badge {
+  padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.bg-green { background: rgba(16, 185, 129, 0.15); color: var(--estado-exito); border: 1px solid rgba(16, 185, 129, 0.3); }
+.bg-red { background: rgba(239, 68, 68, 0.15); color: var(--estado-error); border: 1px solid rgba(239, 68, 68, 0.3); }
+.bg-yellow { background: rgba(251, 191, 36, 0.15); color: var(--acento-amarillo); border: 1px solid rgba(251, 191, 36, 0.3); }
+.bg-gray { background: rgba(148, 163, 184, 0.1); color: var(--texto-secundario); border: 1px solid var(--borde); }
