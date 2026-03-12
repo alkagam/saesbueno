@@ -1,0 +1,25 @@
+# Dependencias de Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Archivos de compilación de Java / Maven
+target/
+*.class
+
+# Archivos empaquetados generados
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Configuración de IDEs (Opcional, pero recomendado no subirlos)
+.vscode/
+.idea/
+*.iml
+*.swp
+
+# Logs y archivos del sistema
+logs/
+.DS_Store
