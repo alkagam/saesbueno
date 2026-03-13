@@ -248,13 +248,15 @@
        ========================================= */
     document.getElementById('form-alta-alumno').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const payload = {
+     const payload = {
         boleta: document.getElementById('a_boleta').value,
         nombre: document.getElementById('a_nombre').value,
         apellido_paterno: document.getElementById('a_paterno').value,
-        apellido_materno: document.getElementById('a_materno').value,
+        apellido_materno: document.getElementById('a_materno').value || null,
         curp: document.getElementById('a_curp').value,
         correo_institucional: document.getElementById('a_correo').value,
+        correo_personal: null, // <-- Aseguramos que envíe nulo y no undefined
+        telefono: null,        // <-- Aseguramos que envíe nulo y no undefined
         fecha_nacimiento: document.getElementById('a_nacimiento').value,
         sexo: document.getElementById('a_sexo').value,
         id_carrera: parseInt(document.getElementById('a_carrera').value),
@@ -263,7 +265,6 @@
         fecha_ingreso: new Date().toISOString().split('T')[0],
         password: document.getElementById('a_password').value
       };
-
       try {
         const response = await fetchConRefresh(`${BASE_URL}/api/users/students`, {
           method: 'POST',

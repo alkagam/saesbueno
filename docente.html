@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal Docentes - SAES Cloud</title>
+  
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="nocturno.css">
+  
   <style>
     /* Estilo específico para inputs pequeños en la tabla de calificaciones */
     .input-calificacion {
@@ -201,7 +204,8 @@
       tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color: var(--texto-secundario);">Cargando alumnos...</td></tr>';
 
       try {
-        const response = await fetchConRefresh(`${BASE_URL}/api/grades/grades/groups/${idGrupo}`);
+        // CORRECCIÓN 1: Se quitó el "grades/grades" doble
+        const response = await fetchConRefresh(`${BASE_URL}/api/grades/groups/${idGrupo}`);
 
         if (response.ok) {
           const data = await response.json();
@@ -260,7 +264,8 @@
       };
 
       try {
-        const response = await fetchConRefresh(`${BASE_URL}/api/grades/grades/${idInscripcion}`, {
+        // CORRECCIÓN 2: Se quitó el "grades/grades" doble
+        const response = await fetchConRefresh(`${BASE_URL}/api/grades/${idInscripcion}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
